@@ -1,0 +1,9 @@
+set number
+syntax on
+filetype on
+filetype plugin indent on
+au BufRead,BufNewFile *.yaka set filetype=python
+set tabstop=4
+set shiftwidth=4
+set softtabstop=4
+set expandtab

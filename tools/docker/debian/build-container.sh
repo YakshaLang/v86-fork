@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+echo copying yaksha...
+rm -rf Yaksha_repo
+cp -r /home/jadoggx86/Projects/Yaksha-work-copy ./Yaksha_repo
+
 set -veu
 
 IMAGES="$(dirname "$0")"/../../../images
