@@ -56,22 +56,36 @@
         hr {
             border-color: transparent;
         }
-
+/* 
         #screen_container {
             display: block;
             width: 1024px;
             height: 768px;
+            max-width: 100000px;
+            max-height: 100000px;
             margin-bottom: 20px;
             margin-left: auto;
             margin-right: auto;
             background-color: gray;
+        } */
+
+        a:link {
+            color: lightskyblue;
         }
 
-        a:link { color: lightskyblue; }
-        a:visited { color: #0cc37a; }
-        a:hover { color: #ffffff; }
-        a:active { color: #ff4040; text-decoration:none; font-weight:normal; }
+        a:visited {
+            color: #0cc37a;
+        }
 
+        a:hover {
+            color: #ffffff;
+        }
+
+        a:active {
+            color: #ff4040;
+            text-decoration: none;
+            font-weight: normal;
+        }
     </style>
 </head>
 
@@ -87,7 +101,8 @@
 
     <hr />
 
-<textarea id="code">import libs&#x2e;console&#x0a;&#x0a;def factorial&#x28;x&#x3a; int&#x29; -&#x3e; int&#x3a;&#x0a;    if x &#x3c;&#x3d; 0&#x3a;&#x0a;        return 1&#x0a;    return x &#x2a; factorial&#x28;x - 1&#x29;&#x0a;&#x0a;def main&#x28;&#x29; -&#x3e; int&#x3a;&#x0a;    a &#x3d; 0&#x0a;    while a &#x3c; 11&#x3a;&#x0a;        console&#x2e;cyan&#x28;&#x22;factorial&#x22;&#x29;&#x0a;        console&#x2e;red&#x28;&#x22;&#x28;&#x22;&#x29;&#x0a;        print&#x28;a&#x29;&#x0a;        console&#x2e;red&#x28;&#x22;&#x29; &#x3d; &#x22;&#x29;&#x0a;        println&#x28;factorial&#x28;a&#x29;&#x29;&#x0a;        a &#x3d; a &#x2b; 1&#x0a;    return 0&#x0a;</textarea>
+    <textarea
+        id="code">import libs&#x2e;console&#x0a;&#x0a;def factorial&#x28;x&#x3a; int&#x29; -&#x3e; int&#x3a;&#x0a;    if x &#x3c;&#x3d; 0&#x3a;&#x0a;        return 1&#x0a;    return x &#x2a; factorial&#x28;x - 1&#x29;&#x0a;&#x0a;def main&#x28;&#x29; -&#x3e; int&#x3a;&#x0a;    a &#x3d; 0&#x0a;    while a &#x3c; 11&#x3a;&#x0a;        console&#x2e;cyan&#x28;&#x22;factorial&#x22;&#x29;&#x0a;        console&#x2e;red&#x28;&#x22;&#x28;&#x22;&#x29;&#x0a;        print&#x28;a&#x29;&#x0a;        console&#x2e;red&#x28;&#x22;&#x29; &#x3d; &#x22;&#x29;&#x0a;        println&#x28;factorial&#x28;a&#x29;&#x29;&#x0a;        a &#x3d; a &#x2b; 1&#x0a;    return 0&#x0a;</textarea>
     <hr />
     <button onclick="executeCode()">Run</button>
     <button onclick="executeCodeLisp()">Run YakshaLisp</button>
@@ -95,13 +110,17 @@
     <hr />
     <p>Click the <u>Boot up</u> button so the virtual machine can start. After it boots up and you can see the prompt,
         then you can either use the nano editor to edit code or use the provided textarea (then press <u>run</u>)</p>
-    <p>Made using <a href="https://github.com/copy/v86">v86</a>, <a href="https://repo.or.cz/w/tinycc.git">tcc</a> and <a href="https://www.debian.org/ports/i386/">debian</a>
-        </p><p><small><small><a href="yakshalang.github.io/">Yaksha Programming Language</a> - Copyright (C) 2023 Bhathiya Perera</small></small></p>
+    <p>Made using <a href="https://github.com/copy/v86">v86</a>, <a href="https://repo.or.cz/w/tinycc.git">tcc</a> and
+        <a href="https://www.debian.org/ports/i386/">debian</a>
+    </p>
+    <p><small><small><a href="yakshalang.github.io/">Yaksha Programming Language</a> - Copyright (C) 2023 Bhathiya
+                Perera</small></small></p>
     <!-- Javascript -->
     <script src="./libv86.js"></script>
     <!-- Related to the emulator -->
     <script>
         var emu = null;
+        var stateBuffer = null;
 
         function sleep(ms) {
             return new Promise(resolve => setTimeout(resolve, ms));
@@ -114,7 +133,7 @@
         }
         async function removeFile(filename) {
             emu.keyboard_send_text("\nrm -f '" + filename + "'\nclear\n");
-            await sleep(500);    
+            await sleep(500);
         }
         async function clearScreen() {
             emu.keyboard_send_text("\nclear\n");
@@ -149,25 +168,108 @@
             await sleep(99);
         }
 
+        function loadUrlsToMemory(urls, concurrency, onSuccess, onFailure) {
+            const arrayBuffers = [];
+            let currentIndex = 0;
+
+            function loadNextBatch() {
+                const batchUrls = urls.slice(currentIndex, currentIndex + concurrency);
+                const promises = batchUrls.map((url) =>
+                    fetch(url)
+                        .then((res) => {
+                            if (!res.ok) {
+                                throw new Error(`Failed to fetch ${url}`);
+                            }
+                            return res.arrayBuffer();
+                        })
+                );
+
+                Promise.all(promises)
+                    .then((batchArrayBuffers) => {
+                        arrayBuffers.push(...batchArrayBuffers);
+                        currentIndex += batchArrayBuffers.length;
+
+                        if (currentIndex < urls.length) {
+                            loadNextBatch();
+                        } else {
+                            const combinedArrayBuffer = new Uint8Array(
+                                arrayBuffers.reduce((totalLength, buffer) => totalLength + buffer.byteLength, 0)
+                            );
+                            let offset = 0;
+                            arrayBuffers.forEach((buffer) => {
+                                combinedArrayBuffer.set(new Uint8Array(buffer), offset);
+                                offset += buffer.byteLength;
+                            });
+
+                            onSuccess(combinedArrayBuffer.buffer);
+                        }
+                    })
+                    .catch((error) => {
+                        onFailure(error.message);
+                    });
+            }
+
+            loadNextBatch();
+        }
+
         function startEmulator() {
-            var emulator = new V86Starter({
-                wasm_path: "./v86.wasm",
-                memory_size: 512 * 1024 * 1024,
-                vga_memory_size: 16 * 1024 * 1024,
-                bios: { url: "./bios/seabios.bin" },
-                vga_bios: { url: "./bios/vgabios.bin" },
-                screen_container: document.getElementById("screen_container"),
-                network_relay_url: "<UNUSED>",
-                bzimage_initrd_from_filesystem: true,
-                cmdline: "rw init=/bin/systemd root=host9p console=ttyS0 spectre_v2=off pti=off",
-                filesystem: { baseurl: "./images/debian-9p-rootfs-flat/",
-                              basefs: "./images/debian-base-fs.json" },
-                autostart: true,
-            });
-            emulator.add_listener("emulator-ready", async function () {
-                emu = emulator;
-            });
-            document.getElementById("boot_button").remove();
+            loadUrlsToMemory(
+                [
+                    "./state/xaa",
+                    "./state/xab",
+                    "./state/xac",
+                    "./state/xad",
+                    "./state/xae",
+                    "./state/xaf"
+                ],
+                3, // concurrency
+                (combinedArrayBuffer) => {
+                    console.log("Successfully loaded and concatenated ArrayBuffers");
+                    stateBuffer = combinedArrayBuffer;
+                    const emulator = new V86Starter({
+                        wasm_path: "./v86.wasm",
+                        memory_size: 512 * 1024 * 1024,
+                        vga_memory_size: 16 * 1024 * 1024,
+                        bios: { url: "./bios/seabios.bin" },
+                        vga_bios: { url: "./bios/vgabios.bin" },
+                        screen_container: document.getElementById("screen_container"),
+                        network_relay_url: "<UNUSED>",
+                        bzimage_initrd_from_filesystem: true,
+                        cmdline: "rw init=/bin/systemd root=host9p console=ttyS0 spectre_v2=off pti=off",
+                        filesystem: {
+                            baseurl: "./images/debian-9p-rootfs-flat/",
+                            basefs: "./images/debian-base-fs.json"
+                        },
+                        autostart: true,
+                    });
+                    emulator.add_listener("emulator-ready", async function () {
+                        console.log("Emulator is ready")
+                        emu = emulator;
+                        const was_running = emulator.is_running();
+                        if (was_running) {
+                            await emulator.stop();
+                        }
+                        try {
+                            await emulator.restore_state(stateBuffer);
+                        }
+                        catch (err) {
+                            alert("Something bad happened while restoring the state:\n" + err + "\n\n" +
+                                "Note that the current configuration must be the same as the original");
+                            throw err;
+                        }
+                        if (was_running) {
+                            emulator.run();
+                        }
+                    });
+                    document.getElementById("boot_button").remove();
+                },
+                (errorMessage) => {
+                    console.error(`Failed to load URLs: ${errorMessage}`);
+                }
+            );
+
+
+
         };
     </script>
 

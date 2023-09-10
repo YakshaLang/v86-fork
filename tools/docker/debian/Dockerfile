@@ -15,7 +15,7 @@ RUN apt update && \
     lsb-release software-properties-common gnupg2 \
     linux-image-686 grub2 systemd \
     libc6-dev make \
-    unzip bzip2 xz-utils nano htop \
+    unzip bzip2 xz-utils nano htop gawk \
     strace file apt-file \
     dhcpcd5 \
     wget curl \
@@ -74,7 +74,7 @@ RUN apt --yes --no-install-recommends purge \
     acl tzdata \
     wmctrl xdotool cmake ninja-build clang-$Y_CLANG_VERSION gcc
 RUN apt --yes --no-install-recommends autoremove
-RUN apt --yes --no-install-recommends install libc6-dev fd-find fzf nano vim ripgrep tmux micro htop
+RUN apt --yes --no-install-recommends install libc6-dev procps hstr tree fd-find fzf lsd nano bat vim ripgrep less tmux micro htop bash-completion
 
 
 COPY getty-noclear.conf getty-override.conf /etc/systemd/system/getty@tty1.service.d/
@@ -108,3 +108,7 @@ COPY root-vimrc /root/.vimrc
 COPY micro-settings.json /root/.config/micro/settings.json
 COPY yaka-nanorc /usr/share/nano/yaksha.nanorc
 COPY root-nanorc /root/.nanorc
+COPY ttyper /bin/ttyper
+COPY hyperfine /bin/hyperfine
+RUN chmod +x /bin/ttyper && chmod +x /bin/hyperfine
+RUN hstr --show-configuration >> ~/.bashrc

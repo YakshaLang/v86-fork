@@ -28,3 +28,4 @@ bios/seabios
 tools/docker/debian/Yaksha_repo/
 !yaksha-playground/v86.wasm
 yaksha-playground/images/
+yaksha-playground/state/

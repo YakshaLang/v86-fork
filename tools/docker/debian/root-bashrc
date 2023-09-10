@@ -3,5 +3,8 @@ eval "$(dircolors)"
 alias ls='ls $LS_OPTIONS'
 alias rm='rm -i'
 alias fd='fdfind'
+alias bat='batcat'
 export PATH="$PATH:/root/yaksha/bin/"
 export PS1='\[\e[91m\]Yak\[\e[92m\]sh\[\e[91m\]a \[\e[0m\][\[\e[96m\]\w\[\e[0m\]] [\[\e[92m\]exit status = \[\e[0m\]$?]\n>>> '
+source /etc/profile.d/bash_completion.sh
+
