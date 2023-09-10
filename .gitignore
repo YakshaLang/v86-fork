@@ -26,3 +26,5 @@ src/rust/gen/jit.rs
 src/rust/gen/jit0f.rs
 bios/seabios
 tools/docker/debian/Yaksha_repo/
+!yaksha-playground/v86.wasm
+yaksha-playground/images/

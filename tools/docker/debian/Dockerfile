@@ -2,11 +2,17 @@ FROM i386/debian:bookworm-20230904-slim
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV RESUME true
-# Install
+ARG Y_CLANG_VERSION=15
+ENV Y_CLANG_VERSION=${Y_CLANG_VERSION}
+ARG Y_TCC_FOLDER=/root/tcc-0.9.27
+ENV Y_TCC_FOLDER=${Y_TCC_FOLDER}
+ARG Y_ROOT_PW=root:root
+ENV Y_ROOT_PW=${Y_ROOT_PW}
 
-#  libc6-dev-amd64-i386-cross libc6-dev-amd64
+
 RUN apt update && \
     apt --yes --no-install-recommends install \
+    lsb-release software-properties-common gnupg2 \
     linux-image-686 grub2 systemd \
     libc6-dev make \
     unzip bzip2 xz-utils nano htop \
@@ -14,28 +20,29 @@ RUN apt update && \
     dhcpcd5 \
     wget curl \
     net-tools git ca-certificates python3 \
-    wmctrl xdotool cmake ninja-build clang-15 && \
+    wmctrl xdotool cmake ninja-build clang-$Y_CLANG_VERSION && \
     echo 'LANG="C.UTF-8"' > /etc/default/locale && \
     chsh -s /bin/bash && \
-    echo "root:root" | chpasswd && \
+    echo $Y_ROOT_PW | chpasswd && \
     mkdir -p /etc/systemd/system/serial-getty@ttyS0.service.d/ && \
     systemctl enable serial-getty@ttyS0.service && \
-    rm /lib/systemd/system/getty.target.wants/getty-static.service 
+    rm /lib/systemd/system/getty.target.wants/getty-static.service
 
 ## --- From local ---
-RUN git clone -b mob https://github.com/TinyCC/tinycc.git /root/tcc-0.9.27
-COPY Yaksha_repo /root/Yaksha_repo
+RUN git clone -b mob https://github.com/TinyCC/tinycc.git $Y_TCC_FOLDER
+# COPY Yaksha_repo /root/Yaksha_repo
+RUN git clone --recurse-submodules -j8 https://github.com/YakshaLang/Yaksha.git /root/Yaksha_repo
 COPY pretend-zig /root/pretend-zig
 
 ## --- Rest of the stuff ----
 RUN cd $HOME  && \ 
-    update-alternatives --install /usr/bin/cc cc /usr/bin/clang-15 100 && \
-    update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++-15 100 && \
+    update-alternatives --install /usr/bin/cc cc /usr/bin/clang-$Y_CLANG_VERSION 100 && \
+    update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++-$Y_CLANG_VERSION 100 && \
     cd Yaksha_repo/compiler && mkdir cmake-build-release && cd cmake-build-release && \
     cmake -S .. -B . && \
     cmake --build . --config Release -j 4 && \
     apt --yes --no-install-recommends install gcc && \
-    cd $HOME/tcc-0.9.27 && ./configure --cpu=i386 && make && make install && \
+    cd $Y_TCC_FOLDER && ./configure --cpu=i386 && make && make install && \
     cd $HOME && mkdir yaksha && \
     cd $HOME/yaksha && \
     mkdir $HOME/yaksha/bin && \
@@ -63,9 +70,11 @@ RUN apt --yes --no-install-recommends purge \
     dhcpcd5 \
     wget curl \
     net-tools git ca-certificates python3 \
-    wmctrl xdotool cmake ninja-build clang-15 gcc
+    lsb-release wget software-properties-common gnupg2 \
+    acl tzdata \
+    wmctrl xdotool cmake ninja-build clang-$Y_CLANG_VERSION gcc
 RUN apt --yes --no-install-recommends autoremove
-RUN apt --yes --no-install-recommends install libc6-dev nano htop
+RUN apt --yes --no-install-recommends install libc6-dev fd-find fzf nano vim ripgrep tmux micro htop
 
 
 COPY getty-noclear.conf getty-override.conf /etc/systemd/system/getty@tty1.service.d/
@@ -82,15 +91,17 @@ COPY sample.yaka /root/sample.yaka
 RUN cd /root && /root/yaksha/bin/yaksha build -RSN /root/sample.yaka && \
     rm /root/*.o && \
     rm /root/*.c && \
-    rm -rf /root/tcc-0.9.27 &&\
+    rm -rf $Y_TCC_FOLDER &&\
     rm /root/sample && \
+    rm -rf /root/yaksha/runtime/raygui && \
+    rm -rf /root/yaksha/runtime/raylib && \
     apt --yes clean && \
     rm -r /var/lib/apt/lists/* && \
     rm -r /usr/share/doc/* && \
     rm -r /usr/share/man/* && \
     rm /var/log/*.log /var/log/lastlog /var/log/wtmp /var/log/apt/*.log /var/log/apt/*.xz /var/lib/dpkg/info/*
 
-RUN     ln -s /usr/local/bin/tcc /bin/cc
+RUN ln -s /usr/local/bin/tcc /bin/cc
 
 COPY root-bashrc /root/.bashrc
 COPY root-vimrc /root/.vimrc

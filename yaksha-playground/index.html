@@ -98,7 +98,7 @@
     <p>Made using <a href="https://github.com/copy/v86">v86</a>, <a href="https://repo.or.cz/w/tinycc.git">tcc</a> and <a href="https://www.debian.org/ports/i386/">debian</a>
         </p><p><small><small><a href="yakshalang.github.io/">Yaksha Programming Language</a> - Copyright (C) 2023 Bhathiya Perera</small></small></p>
     <!-- Javascript -->
-    <script src="../build/libv86.js"></script>
+    <script src="./libv86.js"></script>
     <!-- Related to the emulator -->
     <script>
         var emu = null;
@@ -151,18 +151,15 @@
 
         function startEmulator() {
             var emulator = new V86Starter({
-                wasm_path: "../build/v86.wasm",
+                wasm_path: "./v86.wasm",
                 memory_size: 512 * 1024 * 1024,
                 vga_memory_size: 16 * 1024 * 1024,
-                bios: {
-                    url: "../bios/seabios.bin",
-                },
-                vga_bios: {
-                    url: "../bios/vgabios.bin",
-                },
+                bios: { url: "./bios/seabios.bin" },
+                vga_bios: { url: "./bios/vgabios.bin" },
                 screen_container: document.getElementById("screen_container"),
-                initial_state: { url: "../images/debian-state-base.bin" },
-                filesystem: { baseurl: "../images/debian-9p-rootfs-flat/", basefs: "../images/debian-base-fs.json" },
+                initial_state: { url: "./images/debian-state-base.bin" },
+                filesystem: { baseurl: "./images/debian-9p-rootfs-flat/",
+                              basefs: "./images/debian-base-fs.json" },
                 autostart: true,
             });
             emulator.add_listener("emulator-ready", async function () {
