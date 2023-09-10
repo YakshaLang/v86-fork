@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Hello</title>
+</head>
+
+<body>
+    <script>
+        function displayArrayBufferAsText(arrayBuffer) {
+            const decoder = new TextDecoder("utf-8");
+            const text = ">>>>>" + decoder.decode(arrayBuffer) + "<<<<<";
+            alert(text);
+        }
+
+        function loadUrlsToMemory(urls, concurrency, onSuccess, onFailure) {
+            const arrayBuffers = [];
+            let currentIndex = 0;
+
+            function loadNextBatch() {
+                const batchUrls = urls.slice(currentIndex, currentIndex + concurrency);
+                const promises = batchUrls.map((url) =>
+                    fetch(url)
+                        .then((res) => {
+                            if (!res.ok) {
+                                throw new Error(`Failed to fetch ${url}`);
+                            }
+                            return res.arrayBuffer();
+                        })
+                );
+
+                Promise.all(promises)
+                    .then((batchArrayBuffers) => {
+                        arrayBuffers.push(...batchArrayBuffers);
+                        currentIndex += batchArrayBuffers.length;
+
+                        if (currentIndex < urls.length) {
+                            loadNextBatch();
+                        } else {
+                            const combinedArrayBuffer = new Uint8Array(
+                                arrayBuffers.reduce((totalLength, buffer) => totalLength + buffer.byteLength, 0)
+                            );
+                            let offset = 0;
+                            arrayBuffers.forEach((buffer) => {
+                                combinedArrayBuffer.set(new Uint8Array(buffer), offset);
+                                offset += buffer.byteLength;
+                            });
+
+                            onSuccess(combinedArrayBuffer.buffer);
+                        }
+                    })
+                    .catch((error) => {
+                        onFailure(error.message);
+                    });
+            }
+
+            loadNextBatch();
+        }
+        const urls = [
+            "./1", "./2", "./3", "./4"
+        ];
+        const concurrency = 3;
+        loadUrlsToMemory(
+            urls,
+            concurrency,
+            (combinedArrayBuffer) => {
+                console.log("Successfully loaded and concatenated ArrayBuffers");
+                displayArrayBufferAsText(combinedArrayBuffer);
+            },
+            (errorMessage) => {
+                console.error(`Failed to load URLs: ${errorMessage}`);
+            }
+        );
+
+    </script>
+
+</body>
+
+</html>
