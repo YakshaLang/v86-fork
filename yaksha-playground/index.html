@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
 
 <head>
@@ -16,18 +16,37 @@
         }
 
         body {
+            display: flex;
+            flex-direction: column;
             background: hsl(220, 16%, 16%);
             color: #fff;
-            padding: 16px;
-            height: calc(100% - 32px);
-            width: calc(100% - 32px);
             font: 20px 'Fira Code', monospaced;
         }
 
-        h2 {
+        header {
             text-align: center;
+            padding: 0;
+            height: 80px;
         }
 
+        .splitter {
+            width: calc(100% - 20px);
+            height: calc(100% - 240px);
+            display: flex;
+        }
+
+        #separator {
+            cursor: col-resize;
+            background-color: #aaa;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='30'><path d='M2 0 v30 M5 0 v30 M8 0 v30' fill='none' stroke='black'/></svg>");
+            background-repeat: no-repeat;
+            background-position: center;
+            width: 10px;
+            height: 100%;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
 
         #inner_dv {
             white-space: pre;
@@ -36,38 +55,50 @@
             line-height: 14px;
         }
 
-        textarea {
-            width: calc(100% - 8px);
-            overflow-y: scroll;
-            height: calc(100% - 1190px);
-            resize: none;
-        }
-
-        button {
-            display: inline-block;
-            margin: 2px;
-            font: 20px 'Fira Code', monospaced;
-        }
-
-        canvas {
-            image-rendering: auto !important;
-        }
-
-        hr {
-            border-color: transparent;
-        }
-/* 
         #screen_container {
             display: block;
             width: 1024px;
             height: 768px;
             max-width: 100000px;
             max-height: 100000px;
+            margin-top: 20px;
             margin-bottom: 20px;
             margin-left: auto;
             margin-right: auto;
             background-color: gray;
-        } */
+        }
+
+        #first {
+            background-color: #dde;
+            width: 60%;
+            height: 100%;
+            min-width: 10px;
+            padding-left: 10px;
+        }
+
+        #second {
+            background-color: #eee;
+            width: 40%;
+            height: 100%;
+            min-width: 10px;
+            padding-left: 10px;
+        }
+
+
+        textarea {
+            width: 100%;
+            height: calc(100% - 150px);
+            resize: none;
+        }
+
+        button {
+            margin: 2px;
+            font: 20px 'Fira Code', monospaced;
+        }
+
+        hr {
+            border-color: transparent;
+        }
 
         a:link {
             color: lightskyblue;
@@ -86,44 +117,77 @@
             text-decoration: none;
             font-weight: normal;
         }
+
+        @media (max-width: 1750px) {
+            .splitter {
+                flex-direction: column;
+            }
+
+            #separator {
+                display: none;
+            }
+
+            #second {
+                order: 1;
+            }
+        }
     </style>
 </head>
 
 <body>
-    <h2>Yaksha Programming Language Playground</h2>
-    <hr />
-    <button id="boot_button" onclick="startEmulator()">Boot up</button>
+    <header>
+        <h2>Yaksha Programming Language Playground</h2>
+        <hr />
+    </header>
 
-    <div id="screen_container">
-        <div id="inner_dv"></div>
-        <canvas style="display: none"></canvas>
+    <div class="splitter">
+
+        <div id="first">
+            <!-- Buttons go here -->
+            <button id="boot_button" onclick="startEmulator()">Boot up</button>
+            <!-- Existing content goes here -->
+            <div id="screen_container">
+                <div id="inner_dv"></div>
+                <canvas style="display: none"></canvas>
+            </div>
+
+            <hr />
+            <p>Click the <u>Boot up</u> button so the virtual machine can start. After it boots up and you can see the
+                prompt,
+                then you can either use the nano editor to edit code or use the provided textarea (then press
+                <u>run</u>)</p>
+            <p>Made using <a href="https://github.com/copy/v86">v86</a>, <a
+                    href="https://repo.or.cz/w/tinycc.git">tcc</a> and
+                <a href="https://www.debian.org/ports/i386/">debian</a>
+            </p>
+            <p><small><small><a href="https://yakshalang.github.io/">Yaksha Programming Language</a> - Copyright (C)
+                        2023 Bhathiya
+                        Perera</small></small></p>
+        </div>
+
+        <div id="separator">&nbsp;</div>
+
+
+        <div id="second">
+            <textarea id="code">import libs&#x2e;console&#x0a;&#x0a;def factorial&#x28;x&#x3a; int&#x29; -&#x3e; int&#x3a;&#x0a;    if x &#x3c;&#x3d; 0&#x3a;&#x0a;        return 1&#x0a;    return x &#x2a; factorial&#x28;x - 1&#x29;&#x0a;&#x0a;def main&#x28;&#x29; -&#x3e; int&#x3a;&#x0a;    a &#x3d; 0&#x0a;    while a &#x3c; 11&#x3a;&#x0a;        console&#x2e;cyan&#x28;&#x22;factorial&#x22;&#x29;&#x0a;        console&#x2e;red&#x28;&#x22;&#x28;&#x22;&#x29;&#x0a;        print&#x28;a&#x29;&#x0a;        console&#x2e;red&#x28;&#x22;&#x29; &#x3d; &#x22;&#x29;&#x0a;        println&#x28;factorial&#x28;a&#x29;&#x29;&#x0a;        a &#x3d; a &#x2b; 1&#x0a;    return 0&#x0a;</textarea>
+            <hr />
+            <button onclick="executeCode()">Run</button>
+            <button onclick="executeCodeLisp()">Run YakshaLisp</button>
+            <button onclick="keyboardSendKeys()">Send keys</button>
+            |
+            <button onclick="emu.screen_go_fullscreen()">Fullscreen</button>
+            zoom:
+            <button onclick="emu.screen_adapter.set_scale(0.5, 0.5)">0.5x</button>
+            <button onclick="emu.screen_adapter.set_scale(0.75, 0.75)">0.75x</button>
+            <button onclick="emu.screen_adapter.set_scale(1, 1)">1x</button>
+            <button onclick="emu.screen_adapter.set_scale(1.5, 1.5)">1.5x</button>
+            <button onclick="emu.screen_adapter.set_scale(2, 2)">2x</button>
+            <button onclick="emu.screen_adapter.set_scale(3, 3)">3x</button>
+            <hr />
+        </div>
     </div>
 
-    <hr />
 
-    <textarea
-        id="code">import libs&#x2e;console&#x0a;&#x0a;def factorial&#x28;x&#x3a; int&#x29; -&#x3e; int&#x3a;&#x0a;    if x &#x3c;&#x3d; 0&#x3a;&#x0a;        return 1&#x0a;    return x &#x2a; factorial&#x28;x - 1&#x29;&#x0a;&#x0a;def main&#x28;&#x29; -&#x3e; int&#x3a;&#x0a;    a &#x3d; 0&#x0a;    while a &#x3c; 11&#x3a;&#x0a;        console&#x2e;cyan&#x28;&#x22;factorial&#x22;&#x29;&#x0a;        console&#x2e;red&#x28;&#x22;&#x28;&#x22;&#x29;&#x0a;        print&#x28;a&#x29;&#x0a;        console&#x2e;red&#x28;&#x22;&#x29; &#x3d; &#x22;&#x29;&#x0a;        println&#x28;factorial&#x28;a&#x29;&#x29;&#x0a;        a &#x3d; a &#x2b; 1&#x0a;    return 0&#x0a;</textarea>
-    <hr />
-    <button onclick="executeCode()">Run</button>
-    <button onclick="executeCodeLisp()">Run YakshaLisp</button>
-    <button onclick="keyboardSendKeys()">Send keys</button>
-    |
-    <button onclick="emu.screen_go_fullscreen()">Fullscreen</button>
-    zoom: 
-    <button onclick="emu.screen_adapter.set_scale(0.5, 0.5)">0.5x</button>
-    <button onclick="emu.screen_adapter.set_scale(0.75, 0.75)">0.75x</button>
-    <button onclick="emu.screen_adapter.set_scale(1, 1)">1x</button>
-    <button onclick="emu.screen_adapter.set_scale(1.5, 1.5)">1.5x</button>
-    <button onclick="emu.screen_adapter.set_scale(2, 2)">2x</button>
-    <button onclick="emu.screen_adapter.set_scale(3, 3)">3x</button>
-    <hr />
-    <p>Click the <u>Boot up</u> button so the virtual machine can start. After it boots up and you can see the prompt,
-        then you can either use the nano editor to edit code or use the provided textarea (then press <u>run</u>)</p>
-    <p>Made using <a href="https://github.com/copy/v86">v86</a>, <a href="https://repo.or.cz/w/tinycc.git">tcc</a> and
-        <a href="https://www.debian.org/ports/i386/">debian</a>
-    </p>
-    <p><small><small><a href="yakshalang.github.io/">Yaksha Programming Language</a> - Copyright (C) 2023 Bhathiya
-                Perera</small></small></p>
     <!-- Javascript -->
     <script src="./libv86.js"></script>
     <!-- Related to the emulator -->
@@ -229,7 +293,8 @@
                     "./state/xac",
                     "./state/xad",
                     "./state/xae",
-                    "./state/xaf"
+                    "./state/xaf",
+                    "./state/xag",
                 ],
                 3, // concurrency
                 (combinedArrayBuffer) => {
@@ -280,9 +345,51 @@
 
 
         };
+
+        // ----------- related to drag / split ----- 
+
+        // A function is used for dragging and moving
+        function dragElement(element, direction) {
+            var md; // remember mouse down info
+            const first = document.getElementById("first");
+            const second = document.getElementById("second");
+
+            element.onmousedown = onMouseDown;
+
+            function onMouseDown(e) {
+                md = {
+                    e,
+                    offsetLeft: element.offsetLeft,
+                    offsetTop: element.offsetTop,
+                    firstWidth: first.offsetWidth,
+                    secondWidth: second.offsetWidth
+                };
+
+                document.onmousemove = onMouseMove;
+                document.onmouseup = () => {
+                    document.onmousemove = document.onmouseup = null;
+                }
+            }
+
+            function onMouseMove(e) {
+                var delta = {
+                    x: e.clientX - md.e.clientX,
+                    y: e.clientY - md.e.clientY
+                };
+
+                if (direction === "H") {
+                    delta.x = Math.min(Math.max(delta.x, -md.firstWidth),
+                        md.secondWidth);
+
+                    element.style.left = md.offsetLeft + delta.x + "px";
+                    first.style.width = (md.firstWidth + delta.x) + "px";
+                    second.style.width = (md.secondWidth - delta.x) + "px";
+                }
+            }
+        }
+
+        dragElement(document.getElementById("separator"), "H");
     </script>
-
-
 </body>
 
 </html>

@@ -13,5 +13,5 @@ cp -r ../images .
 rm -rf state ; mkdir state
 mv images/debian-state-base.bin ./state
 cd state
-split --bytes=12M debian-state-base.bin
+split -b 11m debian-state-base.bin
 rm debian-state-base.bin
